@@ -45,3 +45,19 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+
+data class Dog(
+    val id: Int,
+    val name: String,
+    val age: Int,
+    val breed: String,
+    val info: String?,
+    val checkedIn: Boolean,
+)
+
+val startDogs = listOf(
+    Dog(1, "Caisa", 7, "Akita", "", true),
+    Dog(2, "Oso", 3, "Akita", "Snappy", true),
+    Dog(3, "Arya", 1, "Akita", "Food-motivated", true),
+    Dog(4, "Ayumi", 1, "Akita", "Energetic", true)
+)
