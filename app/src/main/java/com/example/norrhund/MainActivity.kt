@@ -6,11 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.norrhund.ui.theme.NorrhundTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,10 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             NorrhundTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    DogViewScreen()
                 }
             }
         }
@@ -61,3 +61,10 @@ val startDogs = listOf(
     Dog(3, "Arya", 1, "Akita", "Food-motivated", true),
     Dog(4, "Ayumi", 1, "Akita", "Energetic", true)
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
+    val state = viewModel.uiState
+
+}
