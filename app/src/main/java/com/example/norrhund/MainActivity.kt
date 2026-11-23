@@ -29,6 +29,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.norrhund.ui.theme.NorrhundTheme
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.Alignment
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,24 +92,107 @@ val startDogs = listOf(
 @Composable
 fun DogCard(
     dog: Dog,
+    onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
-        Column(
+        Row(
             modifier = Modifier
-                .padding(start = 12.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = dog.name, style = MaterialTheme.typography.titleMedium)
-            Text(text ="${dog.age} år")
-            Text(text = "Ras ${dog.breed}")
+            Column {
+                Text(text = dog.name, style = MaterialTheme.typography.titleMedium)
+                Text(text = "${dog.age} år")
+                Text(text = "Ras: ${dog.breed}")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (dog.checkedIn) "Närvarande" else "Frånvarande",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Checkbox(
+                    checked = dog.checkedIn,
+                    onCheckedChange = onCheckedChange
+                )
+            }
         }
     }
+}
+
+@Composable
+fun AddDog(
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, age: Int, breed: String, info: String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var age by remember { mutableStateOf("") }
+    var breed by remember { mutableStateOf("") }
+    var info by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Lägg till hund") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+               TextField(
+                   value = name,
+                   onValueChange = { name = it },
+                   label = { Text("Namn") },
+                   singleLine = true,
+                   modifier = Modifier.fillMaxWidth()
+               )
+               TextField(
+                   value = age,
+                   onValueChange = { age = it },
+                   label = { Text("Ålder") },
+                   singleLine = true,
+                   modifier = Modifier.fillMaxWidth()
+               )
+               TextField(
+                   value = breed,
+                   onValueChange = { breed = it },
+                   label = { Text("Ras/Raser") },
+                   singleLine = true,
+                   modifier = Modifier.fillMaxWidth()
+               )
+               TextField(
+                   value = info,
+                   onValueChange = { info = it },
+                   label = { Text("Bra att veta om hunden") },
+                   modifier = Modifier.fillMaxWidth()
+               )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val ageInt = age.toIntOrNull() ?: 0
+                    if(name.isNotBlank()) {
+                        onConfirm(name, ageInt, breed, info)
+                    }
+                }
+            )
+            { Text("Spara") }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss
+            )
+            { Text("Avbryt") }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
     val state = viewModel.uiState
+    var showAddDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar =  {
             TopAppBar(
@@ -103,6 +201,12 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
+        },
+
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Skapa ny hund")
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -113,8 +217,22 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.dogs, key = { it.id }) { dog ->
-                DogCard(dog = dog)
+                DogCard(
+                    dog = dog,
+                    onCheckedChange = { isChecked ->
+                        viewModel.toggleCheckedIn(dog.id, isChecked)
+                    })
             }
+        }
+
+        if(showAddDialog) {
+            AddDog(
+                onDismiss = { showAddDialog = false },
+                onConfirm = { name, age, breed, info ->
+                    viewModel.addDog(name, age, breed, info)
+                    showAddDialog = false
+                }
+            )
         }
     }
 }
