@@ -29,6 +29,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.norrhund.ui.theme.NorrhundTheme
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.TextField
@@ -43,7 +44,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.input.KeyboardType
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,16 +88,17 @@ data class Dog(
 )
 
 val startDogs = listOf(
-    Dog(1, "Caisa", 7, "Akita", "", true),
-    Dog(2, "Oso", 3, "Akita", "Snappy", true),
-    Dog(3, "Arya", 1, "Akita", "Food-motivated", true),
-    Dog(4, "Ayumi", 1, "Akita", "Energetic", true)
+    Dog(1, "Caisa", 7, "Akita", "", false),
+    Dog(2, "Oso", 3, "Akita", "Snappy", false),
+    Dog(3, "Arya", 1, "Akita", "Food-motivated", false),
+    Dog(4, "Ayumi", 1, "Akita", "Energetic", false)
 )
 
 @Composable
 fun DogCard(
     dog: Dog,
     onCheckedChange: (Boolean) -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -118,6 +124,13 @@ fun DogCard(
                     checked = dog.checkedIn,
                     onCheckedChange = onCheckedChange
                 )
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Ta bort ${dog.name}",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
@@ -133,9 +146,11 @@ fun AddDog(
     var breed by remember { mutableStateOf("") }
     var info by remember { mutableStateOf("") }
 
+    val isFormValid = name.isNotBlank() && age.isNotBlank() && breed.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Lägg till hund") },
+        title = { Text("Skapa en ny hund") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                TextField(
@@ -147,9 +162,14 @@ fun AddDog(
                )
                TextField(
                    value = age,
-                   onValueChange = { age = it },
-                   label = { Text("Ålder") },
+                   onValueChange = { newValue ->
+                       if(newValue.all { it.isDigit() } && newValue.length <= 2) {
+                           age = newValue
+                       }
+                   },
+                   label = { Text("Antal år") },
                    singleLine = true,
+                   keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                    modifier = Modifier.fillMaxWidth()
                )
                TextField(
@@ -171,10 +191,11 @@ fun AddDog(
             Button(
                 onClick = {
                     val ageInt = age.toIntOrNull() ?: 0
-                    if(name.isNotBlank()) {
-                        onConfirm(name, ageInt, breed, info)
+                    if(isFormValid && ageInt != null) {
+                        onConfirm(name.trim(), ageInt, breed.trim(), info.trim())
                     }
-                }
+                },
+                enabled = isFormValid
             )
             { Text("Spara") }
         },
@@ -187,11 +208,40 @@ fun AddDog(
     )
 }
 
+@Composable
+fun DeleteDog(
+    dogName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Radera hund") },
+        text = { Text("Är du säker på att du vill radera $dogName?") },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Radera")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Avbryt")
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
     val state = viewModel.uiState
     var showAddDialog by remember { mutableStateOf(false) }
+    var dogToDelete by remember { mutableStateOf<Dog?>(null) }
 
     Scaffold(
         topBar =  {
@@ -221,6 +271,9 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                     dog = dog,
                     onCheckedChange = { isChecked ->
                         viewModel.toggleCheckedIn(dog.id, isChecked)
+                    },
+                    onDeleteClick = {
+                        dogToDelete = dog
                     })
             }
         }
@@ -231,6 +284,17 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                 onConfirm = { name, age, breed, info ->
                     viewModel.addDog(name, age, breed, info)
                     showAddDialog = false
+                }
+            )
+        }
+
+        dogToDelete?.let { dog ->
+            DeleteDog(
+                dogName = dog.name,
+                onDismiss = { dogToDelete = null },
+                onConfirm = {
+                    viewModel.removeDog(dog.id)
+                    dogToDelete = null
                 }
             )
         }

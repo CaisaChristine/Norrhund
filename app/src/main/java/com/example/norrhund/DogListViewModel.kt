@@ -27,6 +27,12 @@ class DogListViewModel: ViewModel() {
         uiState = uiState.copy(dogs = uiState.dogs + newDog)
     }
 
+    fun removeDog(dogId: Int) {
+        uiState = uiState.copy(
+            dogs = uiState.dogs.filter { it.id != dogId }
+        )
+    }
+
     fun toggleCheckedIn(dogId: Int, isChecked: Boolean) {
         val updatedDog = uiState.dogs.map { dog ->
             if (dog.id == dogId) {
