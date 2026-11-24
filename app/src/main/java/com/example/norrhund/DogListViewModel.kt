@@ -14,10 +14,11 @@ class DogListViewModel: ViewModel() {
     var uiState by mutableStateOf(DogListUiState())
         private set
 
+    private var nextId = (uiState.dogs.maxOfOrNull { it.id } ?: 0) + 1
+
     fun addDog(name: String, age: Int, breed: String, info: String) {
-        val nextId = (uiState.dogs.maxOfOrNull { it.id } ?: 0) + 1
         val newDog = Dog(
-            id = nextId,
+            id = nextId++,
             name = name,
             age = age,
             breed = breed,
@@ -25,6 +26,22 @@ class DogListViewModel: ViewModel() {
             checkedIn = false
         )
         uiState = uiState.copy(dogs = uiState.dogs + newDog)
+    }
+
+    fun updateDog(id:Int, name: String, age: Int, breed: String, info: String) {
+        val updatedDogs = uiState.dogs.map { dog ->
+            if(dog.id == id) {
+                dog.copy(
+                    name = name,
+                    age = age,
+                    breed = breed,
+                    info = info.ifBlank { null }
+                )
+            } else {
+                dog
+            }
+        }
+        uiState = uiState.copy(dogs = updatedDogs)
     }
 
     fun removeDog(dogId: Int) {

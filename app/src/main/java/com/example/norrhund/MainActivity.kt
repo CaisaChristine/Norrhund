@@ -45,6 +45,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.Alignment
@@ -98,6 +99,7 @@ val startDogs = listOf(
 fun DogCard(
     dog: Dog,
     onCheckedChange: (Boolean) -> Unit,
+    onUpdateClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -109,7 +111,9 @@ fun DogCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
+            Column (
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(text = dog.name, style = MaterialTheme.typography.titleMedium)
                 Text(text = "${dog.age} år")
                 Text(text = "Ras: ${dog.breed}")
@@ -124,6 +128,12 @@ fun DogCard(
                     checked = dog.checkedIn,
                     onCheckedChange = onCheckedChange
                 )
+                IconButton(onClick = onUpdateClick) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Ändra ${dog.name}"
+                    )
+                }
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -138,6 +148,7 @@ fun DogCard(
 
 @Composable
 fun AddDog(
+    dogToUpdate: Dog? = null,
     onDismiss: () -> Unit,
     onConfirm: (name: String, age: Int, breed: String, info: String) -> Unit
 ) {
@@ -150,7 +161,7 @@ fun AddDog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Skapa en ny hund") },
+        title = { Text(if(dogToUpdate == null) "Skapa en ny hund" else "Ändra ${dogToUpdate.name}")},
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                TextField(
@@ -241,6 +252,7 @@ fun DeleteDog(
 fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
     val state = viewModel.uiState
     var showAddDialog by remember { mutableStateOf(false) }
+    var dogToUpdate by remember { mutableStateOf<Dog?>(null) }
     var dogToDelete by remember { mutableStateOf<Dog?>(null) }
 
     Scaffold(
@@ -272,6 +284,9 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                     onCheckedChange = { isChecked ->
                         viewModel.toggleCheckedIn(dog.id, isChecked)
                     },
+                    onUpdateClick = {
+                        dogToUpdate = dog
+                    },
                     onDeleteClick = {
                         dogToDelete = dog
                     })
@@ -284,6 +299,17 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                 onConfirm = { name, age, breed, info ->
                     viewModel.addDog(name, age, breed, info)
                     showAddDialog = false
+                }
+            )
+        }
+
+        dogToUpdate?.let { dog ->
+            AddDog(
+                dogToUpdate = dog,
+                onDismiss = { dogToUpdate = null },
+                onConfirm = { name, age, breed, info ->
+                    viewModel.updateDog(dog.id, name, age, breed, info)
+                    dogToUpdate = null
                 }
             )
         }
