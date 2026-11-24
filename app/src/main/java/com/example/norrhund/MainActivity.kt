@@ -152,10 +152,10 @@ fun AddDog(
     onDismiss: () -> Unit,
     onConfirm: (name: String, age: Int, breed: String, info: String) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var breed by remember { mutableStateOf("") }
-    var info by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(dogToUpdate?.name ?: "") }
+    var age by remember { mutableStateOf(dogToUpdate?.age?.toString() ?: "") }
+    var breed by remember { mutableStateOf(dogToUpdate?.breed ?: "") }
+    var info by remember { mutableStateOf(dogToUpdate?.info ?: "") }
 
     val isFormValid = name.isNotBlank() && age.isNotBlank() && breed.isNotBlank()
 
@@ -247,11 +247,55 @@ fun DeleteDog(
     )
 }
 
+@Composable
+fun ListCheckedInDogs(
+    dogs: List<Dog>,
+    onDismiss: () -> Unit
+) {
+    val checkedInDogs = dogs.filter { it.checkedIn }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Incheckade hundar just nu (${checkedInDogs.size})") },
+        text = {
+            if(checkedInDogs.isEmpty()) {
+                Text("Inga hundar incheckade för tillfället.")
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(checkedInDogs, key = { it.id }) { dog ->
+                        Column {
+                            Text(
+                                text = "• ${dog.name} (Ras: ${dog.breed}, ${dog.age} år)",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            if(!dog.info.isNullOrBlank()) {
+                                Text(
+                                    text = "Bra att veta: ${dog.info}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Stäng")
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
     val state = viewModel.uiState
+    val checkedInCount = state.dogs.count { it.checkedIn }
+
     var showAddDialog by remember { mutableStateOf(false) }
+    var showCheckedInDialog by remember { mutableStateOf(false) }
     var dogToUpdate by remember { mutableStateOf<Dog?>(null) }
     var dogToDelete by remember { mutableStateOf<Dog?>(null) }
 
@@ -259,6 +303,11 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
         topBar =  {
             TopAppBar(
                 title = { Text("Välkommen till Norrhund pensionat och dagis") },
+                actions = {
+                    TextButton(onClick = { showCheckedInDialog = true }) {
+                        Text("Incheckade ($checkedInCount)")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -291,6 +340,13 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                         dogToDelete = dog
                     })
             }
+        }
+
+        if(showCheckedInDialog) {
+            ListCheckedInDogs(
+                dogs = state.dogs,
+                onDismiss = { showCheckedInDialog = false }
+            )
         }
 
         if(showAddDialog) {
