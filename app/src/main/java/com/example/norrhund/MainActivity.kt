@@ -1,12 +1,13 @@
 package com.example.norrhund
 
-import android.R
+import androidx.compose.ui.graphics.Color
 import android.graphics.Paint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -131,7 +132,7 @@ fun DogCard(
                     Icon(
                         imageVector = Icons.Default.Pets,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (isSystemInDarkTheme()) Color.White else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
@@ -168,7 +169,7 @@ fun DogCard(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Ta bort ${dog.name}",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -311,7 +312,7 @@ fun DeleteDog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            Button(onClick = onDismiss) {
                 Text("Avbryt")
             }
         }
