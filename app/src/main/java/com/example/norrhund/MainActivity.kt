@@ -48,6 +48,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.Alignment
@@ -116,12 +121,32 @@ fun DogCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column (
+            Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = dog.name, style = MaterialTheme.typography.titleMedium)
-                Text(text = "${dog.age} år")
-                Text(text = "Ras: ${dog.breed}")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Pets,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = dog.name,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            Text(
+                text = "${dog.age} år",
+                style = MaterialTheme.typography.bodyMedium
+                )
+            Text(
+                text = "Ras: ${dog.breed}",
+                style = MaterialTheme.typography.bodyMedium
+            )
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
