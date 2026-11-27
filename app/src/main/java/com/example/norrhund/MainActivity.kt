@@ -1,5 +1,7 @@
 package com.example.norrhund
 
+import android.R
+import android.graphics.Paint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -89,21 +91,24 @@ data class Dog(
 )
 
 val startDogs = listOf(
-    Dog(1, "Caisa", 7, "Akita", "", false),
+    Dog(1, "Caisa", 7, "Akita", null, false),
     Dog(2, "Oso", 3, "Akita", "Snappy", false),
-    Dog(3, "Arya", 1, "Akita", "Food-motivated", false),
-    Dog(4, "Ayumi", 1, "Akita", "Energetic", false)
+    Dog(3, "Arya", 1, "Akita", "Mat-motiverad", false),
+    Dog(4, "Ayumi", 1, "Akita", "Energisk", false)
 )
-
 @Composable
 fun DogCard(
     dog: Dog,
+    onCardClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     onUpdateClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(
+        onClick = onCardClick,
+        modifier = modifier.fillMaxWidth()
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -144,6 +149,46 @@ fun DogCard(
             }
         }
     }
+}
+
+@Composable
+fun ViewDogInfo(
+    dog: Dog,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text(dog.name) },
+    text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Ålder: ${dog.age} år", style = MaterialTheme.typography.bodyLarge)
+            Text("Ras: ${dog.breed}", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = "Status: ${if (dog.checkedIn) "Närvarande" else "Frånvarande"}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = "Bra att veta om hunden ->",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            Text(
+                text = dog.info ?: "Ingen extra information angiven.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if(dog.info == null) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
+    },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Stäng")
+            }
+        }
+    )
 }
 
 @Composable
@@ -299,6 +344,7 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
     var showCheckedInDialog by remember { mutableStateOf(false) }
     var dogToUpdate by remember { mutableStateOf<Dog?>(null) }
     var dogToDelete by remember { mutableStateOf<Dog?>(null) }
+    var selectedDog by remember { mutableStateOf<Dog?>(null) }
 
     Scaffold(
         topBar =  {
@@ -306,7 +352,7 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                 title = { Text("Välkommen till Norrhund pensionat och dagis") },
                 actions = {
                     TextButton(onClick = { showCheckedInDialog = true }) {
-                        Text("Incheckade ($checkedInCount)")
+                        Text("Närvarande ($checkedInCount)")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -331,6 +377,7 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
             items(state.dogs, key = { it.id }) { dog ->
                 DogCard(
                     dog = dog,
+                    onCardClick = { selectedDog = dog },
                     onCheckedChange = { isChecked ->
                         viewModel.toggleCheckedIn(dog.id, isChecked)
                     },
@@ -379,6 +426,13 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
                     viewModel.removeDog(dog.id)
                     dogToDelete = null
                 }
+            )
+        }
+
+        selectedDog?.let { dog ->
+            ViewDogInfo(
+                dog = dog,
+                onDismiss = { selectedDog = null }
             )
         }
     }
