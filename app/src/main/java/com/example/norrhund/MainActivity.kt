@@ -376,12 +376,18 @@ fun DogViewScreen(viewModel: DogListViewModel = viewModel()) {
             TopAppBar(
                 title = { Text("Välkommen till Norrhund pensionat och dagis") },
                 actions = {
-                    TextButton(onClick = { showCheckedInDialog = true }) {
+                    TextButton(
+                        onClick = { showCheckedInDialog = true },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        ) {
                         Text("Närvarande ($checkedInCount)")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         },
