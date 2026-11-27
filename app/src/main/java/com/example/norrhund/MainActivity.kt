@@ -150,7 +150,7 @@ fun DogCard(
 fun AddDog(
     dogToUpdate: Dog? = null,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, age: Int, breed: String, info: String) -> Unit
+    onConfirm: (name: String, age: Int, breed: String, info: String?) -> Unit
 ) {
     var name by remember { mutableStateOf(dogToUpdate?.name ?: "") }
     var age by remember { mutableStateOf(dogToUpdate?.age?.toString() ?: "") }
@@ -203,7 +203,8 @@ fun AddDog(
                 onClick = {
                     val ageInt = age.toIntOrNull() ?: 0
                     if(isFormValid && ageInt != null) {
-                        onConfirm(name.trim(), ageInt, breed.trim(), info.trim())
+                        val infoOrNull = info.trim().ifEmpty { null }
+                        onConfirm(name.trim(), ageInt, breed.trim(), infoOrNull)
                     }
                 },
                 enabled = isFormValid

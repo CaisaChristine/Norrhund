@@ -16,26 +16,26 @@ class DogListViewModel: ViewModel() {
 
     private var nextId = (uiState.dogs.maxOfOrNull { it.id } ?: 0) + 1
 
-    fun addDog(name: String, age: Int, breed: String, info: String) {
+    fun addDog(name: String, age: Int, breed: String, info: String?) {
         val newDog = Dog(
             id = nextId++,
             name = name,
             age = age,
             breed = breed,
-            info = info.ifBlank { null },
+            info = info?.trim()?.takeIf { it.isNotEmpty() },
             checkedIn = false
         )
         uiState = uiState.copy(dogs = uiState.dogs + newDog)
     }
 
-    fun updateDog(id:Int, name: String, age: Int, breed: String, info: String) {
+    fun updateDog(id:Int, name: String, age: Int, breed: String, info: String?) {
         val updatedDogs = uiState.dogs.map { dog ->
             if(dog.id == id) {
                 dog.copy(
                     name = name,
                     age = age,
                     breed = breed,
-                    info = info.ifBlank { null }
+                    info = info?.trim()?.takeIf { it.isNotEmpty() }
                 )
             } else {
                 dog
